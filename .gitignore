@@ -1,3 +1,9 @@
+# Project documentation (local only)
+CLAUDE.md
+PRD.md
+ROADMAP.md
+SESSION_NOTES.md
+
 # Gradle
 .gradle/
 build/
