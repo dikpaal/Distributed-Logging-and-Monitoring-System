@@ -1,0 +1,10 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: alert-service
+
+logging:
+  level:
+    com.logging: DEBUG
