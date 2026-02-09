@@ -1,0 +1,66 @@
+# User-specified ignores
+CLAUDE.md
+PRD.md
+SESSION_NOTES.md
+
+# General ignores
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+*.log
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+
+# Ruby
+.bundle/
+log/
+tmp/
+
+# C/C++
+*.o
+*.out
+*.exe
+*.so
+*.a
+*.dll
+
+# Rust
+target/
+debug/
+.cargo/
+
+# IDEs
+.idea/
+.vscode/
+
+# Zencoder/Zenflow
+.zencoder/
+.zenflow/
