@@ -1,6 +1,7 @@
 package com.logging.ingestion.controller;
 
 import com.logging.common.dto.LogEvent;
+import com.logging.ingestion.kafka.LogProducer;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,12 @@ public class LogIngestionController {
 
     private static final Logger log = LoggerFactory.getLogger(LogIngestionController.class);
 
+    private final LogProducer logProducer;
+
+    public LogIngestionController(LogProducer logProducer) {
+        this.logProducer = logProducer;
+    }
+
     @PostMapping
     public ResponseEntity<Map<String, String>> ingestLog(
             @Valid @RequestBody LogEvent logEvent,
@@ -27,6 +34,8 @@ public class LogIngestionController {
 
         log.debug("Received log: service={}, severity={}, traceId={}, idempotencyKey={}",
                 logEvent.serviceName(), logEvent.severity(), logEvent.traceId(), idempotencyKey);
+
+        logProducer.send(logEvent);
 
         return ResponseEntity.ok(Map.of("status", "accepted"));
     }
@@ -37,6 +46,8 @@ public class LogIngestionController {
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
 
         log.debug("Received batch of {} logs, idempotencyKey={}", logEvents.size(), idempotencyKey);
+
+        logEvents.forEach(logProducer::send);
 
         return ResponseEntity.ok(Map.of(
                 "status", "accepted",
