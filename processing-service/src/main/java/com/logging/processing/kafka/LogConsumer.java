@@ -1,6 +1,7 @@
 package com.logging.processing.kafka;
 
 import com.logging.common.dto.LogEvent;
+import com.logging.processing.cache.LogCacheService;
 import com.logging.processing.entity.LogEntity;
 import com.logging.processing.repository.LogRepository;
 import org.slf4j.Logger;
@@ -18,9 +19,11 @@ public class LogConsumer {
     private static final Logger log = LoggerFactory.getLogger(LogConsumer.class);
 
     private final LogRepository logRepository;
+    private final LogCacheService logCacheService;
 
-    public LogConsumer(LogRepository logRepository) {
+    public LogConsumer(LogRepository logRepository, LogCacheService logCacheService) {
         this.logRepository = logRepository;
+        this.logCacheService = logCacheService;
     }
 
     @KafkaListener(
@@ -47,10 +50,12 @@ public class LogConsumer {
                     logEvent.metadata()
             );
 
+            // Persist to PostgreSQL
             logRepository.save(entity);
             log.debug("Persisted log to database: id={}", entity.getId());
 
-            // TODO: Phase 7 - cache in Redis
+            // Cache in Redis
+            logCacheService.cacheRecentLog(entity);
 
             acknowledgment.acknowledge();
             log.debug("Acknowledged offset: {}", offset);
