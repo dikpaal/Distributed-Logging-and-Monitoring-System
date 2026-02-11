@@ -1,0 +1,16 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: payment-service
+
+app:
+  ingestion:
+    url: http://localhost:80
+  order-service:
+    url: http://localhost:9003
+
+logging:
+  level:
+    com.logging: DEBUG

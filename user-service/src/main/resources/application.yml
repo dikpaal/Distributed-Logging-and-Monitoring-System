@@ -1,0 +1,19 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: user-service
+
+app:
+  ingestion:
+    url: http://localhost:80
+  payment-service:
+    url: http://localhost:9002
+  generator:
+    enabled: false
+    interval-ms: 1000
+
+logging:
+  level:
+    com.logging: DEBUG

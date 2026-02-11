@@ -1,0 +1,14 @@
+server:
+  port: 9003
+
+spring:
+  application:
+    name: order-service
+
+app:
+  ingestion:
+    url: http://localhost:80
+
+logging:
+  level:
+    com.logging: DEBUG
