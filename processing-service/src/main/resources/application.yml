@@ -8,6 +8,17 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: log-processors
+  datasource:
+    url: jdbc:postgresql://localhost:5434/logging
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 app:
   kafka:
