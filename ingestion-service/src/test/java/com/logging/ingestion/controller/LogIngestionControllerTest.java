@@ -1,6 +1,8 @@
 package com.logging.ingestion.controller;
 
 import com.logging.ingestion.kafka.LogProducer;
+import com.logging.ingestion.service.IdempotencyService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -8,6 +10,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -21,6 +25,16 @@ class LogIngestionControllerTest {
 
     @MockBean
     private LogProducer logProducer;
+
+    @MockBean
+    private IdempotencyService idempotencyService;
+
+    @BeforeEach
+    void setUp() {
+        // By default, allow all idempotency checks to pass
+        when(idempotencyService.tryAcquire(anyString())).thenReturn(true);
+        when(idempotencyService.tryAcquire(null)).thenReturn(true);
+    }
 
     @Test
     void healthEndpoint_returnsUp() throws Exception {
@@ -125,5 +139,45 @@ class LogIngestionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("accepted"))
                 .andExpect(jsonPath("$.count").value(2));
+    }
+
+    @Test
+    void ingestLog_duplicateIdempotencyKey_returnsConflict() throws Exception {
+        // Simulate duplicate idempotency key
+        when(idempotencyService.tryAcquire("duplicate-key")).thenReturn(false);
+
+        String json = """
+                {
+                    "serviceName": "payment-service",
+                    "severity": "ERROR",
+                    "message": "Payment failed"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/logs")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Idempotency-Key", "duplicate-key")
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("duplicate"));
+    }
+
+    @Test
+    void ingestBatch_duplicateIdempotencyKey_returnsConflict() throws Exception {
+        // Simulate duplicate idempotency key
+        when(idempotencyService.tryAcquire("duplicate-batch-key")).thenReturn(false);
+
+        String json = """
+                [
+                    {"serviceName": "user-service", "severity": "INFO", "message": "Log 1"}
+                ]
+                """;
+
+        mockMvc.perform(post("/api/v1/logs/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Idempotency-Key", "duplicate-batch-key")
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("duplicate"));
     }
 }

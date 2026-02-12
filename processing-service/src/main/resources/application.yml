@@ -27,9 +27,17 @@ spring:
 app:
   kafka:
     topic: logs.ingested
+    dlq-topic: logs.dlq
   cache:
     recent-logs-limit: 100
     ttl-hours: 1
+  idempotency:
+    ttl-hours: 24
+  retry:
+    max-attempts: 3
+    initial-interval-ms: 1000
+    multiplier: 2.0
+    max-interval-ms: 10000
 
 logging:
   level:
