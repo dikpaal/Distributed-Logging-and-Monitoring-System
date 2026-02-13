@@ -51,6 +51,7 @@ Or directly with Gradle:
 | Service | Tests | Description |
 |---------|-------|-------------|
 | ingestion-service | 9 | Controller tests for log ingestion, validation, idempotency |
+| alert-service | 17 | Controller, service, and model tests for alerting |
 
 ## Test Stack
 
