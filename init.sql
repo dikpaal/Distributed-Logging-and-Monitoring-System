@@ -23,10 +23,13 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp DESC);
 CREATE TABLE IF NOT EXISTS alerts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     rule_name VARCHAR(100) NOT NULL,
-    triggered_at TIMESTAMPTZ NOT NULL,
+    service_name VARCHAR(100),
+    severity VARCHAR(10),
+    count BIGINT NOT NULL,
+    threshold BIGINT NOT NULL,
+    window_seconds INT NOT NULL,
     message TEXT,
-    log_count INT,
-    resolved_at TIMESTAMPTZ,
+    triggered_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

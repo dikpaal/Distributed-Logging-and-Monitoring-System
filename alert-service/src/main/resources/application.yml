@@ -1,9 +1,47 @@
 server:
-  port: 8083
+  port: 8084
 
 spring:
   application:
     name: alert-service
+  datasource:
+    url: jdbc:postgresql://localhost:5434/logging
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: alert-processors
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  kafka:
+    topic: logs.ingested
+  alert:
+    evaluation-interval-ms: 5000
+    cooldown-seconds: 60
+    rules:
+      - name: high-error-rate
+        severity: ERROR
+        threshold: 10
+        windowSeconds: 60
+      - name: service-down
+        serviceName: order-service
+        severity: ERROR
+        threshold: 5
+        windowSeconds: 30
 
 logging:
   level:
