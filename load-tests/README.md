@@ -118,6 +118,19 @@ Thresholds:
 
 ## Interpreting Results
 
+### Test Modes
+
+Use two modes and interpret them differently:
+
+1. **Through NGINX** (`BASE_URL=http://localhost`)
+- Validates load balancing and rate limiting behavior.
+- `429 Too Many Requests` is expected when traffic exceeds NGINX limits.
+- `502 Bad Gateway` indicates backend saturation or service instability under sustained overload.
+
+2. **Direct to ingestion service** (`BASE_URL=http://localhost:8080` or `:8081`)
+- Measures ingestion service baseline without NGINX rate limiting.
+- Best mode for capacity and latency benchmarking of the application layer.
+
 ### Key Metrics
 
 | Metric | Description | Target |
@@ -150,6 +163,31 @@ LATENCY (ms)
 ERROR RATE:           0.22%
 ```
 
+## Latest Baseline Results (2026-02-16)
+
+### Scenario A: Through NGINX at high load
+
+- Rate limiting activated as designed (`429 Too Many Requests`).
+- Backend eventually returned `502 Bad Gateway` under sustained overload.
+- Successful-request latency stayed low before saturation:
+  - p95 ~2.79ms
+  - p99 ~6.71ms
+
+### Scenario B: Direct ingestion baseline
+
+Command:
+```bash
+k6 run --vus 10 --duration 60s -e BASE_URL=http://localhost:8080 ingestion-load-test.js
+```
+
+Results:
+- Requests accepted: `11,680`
+- Throughput: `194.46 req/s`
+- Error rate: `0.00%`
+- HTTP avg latency: `702.28us`
+- HTTP p95 latency: `924.04us`
+- HTTP p99 latency: `2.39ms`
+
 ## Performance Targets
 
 Based on PRD requirements:
@@ -177,12 +215,13 @@ curl http://localhost:8083/health   # Monitoring service
 
 ### Rate Limited
 
-If you see 429 responses, NGINX rate limiting is working. Adjust test parameters or NGINX config.
+If you see 429 responses, NGINX rate limiting is working as designed. For throughput benchmarking, run against ingestion directly (`--base-url http://localhost:8080`).
 
 ### High Error Rate
 
-Check service logs for errors:
+If error rate spikes with 502 responses, backend services are saturated under current load profile. Check service logs and resource limits:
 ```bash
 docker-compose logs -f kafka
 docker-compose logs -f postgres
+docker-compose logs -f nginx
 ```
