@@ -112,5 +112,3 @@ distributed-logging-system/
 ├── nginx/                  # Load balancer config
 └── docker-compose.yml      # Infrastructure
 ```
-
-Current Status: Load testing
