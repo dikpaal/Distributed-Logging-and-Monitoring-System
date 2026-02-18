@@ -107,6 +107,22 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 
 ## Quick Start
 
+### One-Command Startup (Recommended)
+
+```bash
+# Start everything (kills existing services, rebuilds, and starts fresh)
+./start.sh
+
+# Options:
+./start.sh --skip-build    # Skip Gradle build (faster restart)
+./start.sh --infra-only    # Only start Docker containers
+./start.sh --stop          # Stop all services
+```
+
+This will start all infrastructure (Kafka, PostgreSQL, Redis, NGINX), all backend services, and the React dashboard. Logs are written to `./logs/`.
+
+### Manual Startup
+
 ```bash
 # 1) Java 21
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
@@ -138,14 +154,58 @@ Open http://localhost:5173 in your browser to access the dashboard.
 - **Live Logs**: Real-time log streaming via WebSocket
 - **Metrics**: Severity and service distribution charts
 
-## Load Testing Results
+## Load Testing
 
-- Requests accepted: `11,680`
-- Throughput: `194.46 req/s`
-- Error rate: `0.00%`
-- HTTP average latency: `702.28us`
-- HTTP p95 latency: `924.04us`
-- HTTP p99 latency: `2.39ms`
+Load tests use [k6](https://k6.io/) to benchmark the system.
+
+### Prerequisites
+
+```bash
+brew install k6
+```
+
+### Running Load Tests
+
+```bash
+cd load-tests
+
+# Quick smoke test (verify system is working)
+./run-load-tests.sh smoke
+
+# Run specific load tests
+./run-load-tests.sh ingestion     # Single log ingestion (~6 min)
+./run-load-tests.sh batch         # Batch ingestion (~4 min)
+./run-load-tests.sh monitoring    # Query APIs (~4 min)
+./run-load-tests.sh all           # Run all tests
+
+# Quick mode (30s with 10 VUs)
+./run-load-tests.sh ingestion --quick
+
+# Direct to ingestion service (bypasses NGINX rate limiting)
+./run-load-tests.sh ingestion --base-url http://localhost:8080
+```
+
+### Test Configurations
+
+| Test | Duration | Max VUs | Thresholds |
+|------|----------|---------|------------|
+| smoke | ~10s | 1 | p95 < 1s |
+| ingestion | ~6 min | 100 | p95 < 500ms, p99 < 1s |
+| batch | ~4 min | 20 | p95 < 2s, p99 < 5s |
+| monitoring | ~4 min | 30 | p95 < 200ms, p99 < 500ms |
+
+### Baseline Results
+
+Direct ingestion (bypassing NGINX):
+
+| Metric | Value |
+|--------|-------|
+| Requests accepted | 11,680 |
+| Throughput | 194.46 req/s |
+| Error rate | 0.00% |
+| Avg latency | 702.28us |
+| p95 latency | 924.04us |
+| p99 latency | 2.39ms |
 
 ## Project Structure
 
