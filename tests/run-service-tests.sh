@@ -13,7 +13,6 @@ if [ -z "$1" ]; then
     echo "  - ingestion-service"
     echo "  - processing-service"
     echo "  - monitoring-service"
-    echo "  - alert-service"
     echo "  - user-service"
     echo "  - payment-service"
     echo "  - order-service"

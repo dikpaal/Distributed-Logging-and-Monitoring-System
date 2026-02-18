@@ -1,14 +1,14 @@
 # Distributed Logging & Monitoring System
 
-A scalable, event-driven log ingestion and monitoring pipeline demonstrating microservice communication, load balancing, distributed tracing, and Kafka-based processing.
+A scalable, event-driven log ingestion and monitoring pipeline demonstrating microservice communication, load balancing, distributed tracing, and Kafka-based processing. Includes a React dashboard for log querying and real-time streaming.
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Language | Java 21 |
-| Framework | Spring Boot 3.x |
-| Build | Gradle (Kotlin DSL) |
+| Backend | Java 21, Spring Boot 3.x |
+| Frontend | React 18, TypeScript, TailwindCSS |
+| Build | Gradle (Kotlin DSL), Vite |
 | Load Balancer | NGINX |
 | Message Broker | Apache Kafka |
 | Database | PostgreSQL |
@@ -51,13 +51,18 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
                     ▼                              ▼
            ┌─────────────────┐           ┌─────────────────┐
            │   PostgreSQL    │           │     Redis       │
-           └─────────────────┘           └─────────────────┘
+           └────────┬────────┘           └─────────────────┘
                     │
-          ┌─────────┴─────────┐
-          ▼                   ▼
-┌─────────────────┐ ┌─────────────────┐
-│ monitoring-svc  │ │   alert-svc     │
-└─────────────────┘ └─────────────────┘
+                    ▼
+           ┌─────────────────┐
+           │ monitoring-svc  │◀──── Kafka (live stream)
+           │ (REST + WebSocket)
+           └────────┬────────┘
+                    │
+                    ▼
+           ┌─────────────────┐
+           │ React Dashboard │
+           └─────────────────┘
 ```
 
 ## Services
@@ -74,8 +79,12 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 |---------|------|-------------|
 | ingestion-service | 8080, 8081 | REST API for log intake, publishes to Kafka (2 instances) |
 | processing-service | 8082 | Consumes from Kafka, persists to PostgreSQL, caches in Redis |
-| monitoring-service | 8083 | Query APIs for logs and metrics |
-| alert-service | 8084 | Threshold-based alerting on log patterns |
+| monitoring-service | 8083 | Query APIs, metrics, and WebSocket for live logs |
+
+### Frontend
+| Component | Port | Description |
+|-----------|------|-------------|
+| dashboard | 5173 | React dashboard for log querying and live streaming |
 
 ### Infrastructure
 | Component | Port | Description |
@@ -93,6 +102,8 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 - **Idempotent Processing**: Duplicate logs are rejected
 - **Dead Letter Queue**: Failed messages are preserved for debugging
 - **Manual Offset Commits**: No data loss on consumer crashes
+- **Live Log Streaming**: WebSocket-based real-time log updates
+- **React Dashboard**: Search, filter, and monitor logs visually
 
 ## Quick Start
 
@@ -100,22 +111,32 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 # 1) Java 21
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
 
-# 2) Build
+# 2) Build backend
 ./gradlew build
 
 # 3) Start infrastructure
 docker-compose up -d
 
-# 4) Start services (separate terminals)
+# 4) Start backend services (separate terminals)
 ./gradlew :ingestion-service:bootRun --args='--server.port=8080'
 ./gradlew :ingestion-service:bootRun --args='--server.port=8081'
 ./gradlew :processing-service:bootRun
 ./gradlew :monitoring-service:bootRun
-./gradlew :alert-service:bootRun
 ./gradlew :order-service:bootRun
 ./gradlew :payment-service:bootRun
 ./gradlew :user-service:bootRun
+
+# 5) Start dashboard
+cd dashboard && npm install && npm run dev
 ```
+
+Open http://localhost:5173 in your browser to access the dashboard.
+
+## Dashboard Features
+
+- **Search Logs**: Filter by service, severity, trace ID with pagination
+- **Live Logs**: Real-time log streaming via WebSocket
+- **Metrics**: Severity and service distribution charts
 
 ## Load Testing Results
 
@@ -136,8 +157,8 @@ distributed-logging-system/
 ├── order-service/          # Log generator (leaf service)
 ├── ingestion-service/      # Log intake REST API
 ├── processing-service/     # Kafka consumer, DB writer
-├── monitoring-service/     # Query APIs
-├── alert-service/          # Alerting rules
+├── monitoring-service/     # Query APIs + WebSocket
+├── dashboard/              # React frontend
 ├── load-tests/             # k6 scripts and runner
 ├── nginx/                  # Load balancer config
 └── docker-compose.yml      # Infrastructure

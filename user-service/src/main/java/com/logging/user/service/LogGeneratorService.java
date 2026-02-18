@@ -1,5 +1,6 @@
 package com.logging.user.service;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,13 @@ public class LogGeneratorService {
 
     public LogGeneratorService(UserService userService) {
         this.userService = userService;
+    }
+
+    @PostConstruct
+    public void init() {
+        if (autoStart) {
+            start();
+        }
     }
 
     @Scheduled(fixedRateString = "${app.generator.interval-ms:1000}")

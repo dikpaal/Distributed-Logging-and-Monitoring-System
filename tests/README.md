@@ -9,7 +9,6 @@ This project uses JUnit 5 for unit and integration testing. Tests are located wi
 | ingestion-service | `ingestion-service/src/test/java/` |
 | processing-service | `processing-service/src/test/java/` |
 | monitoring-service | `monitoring-service/src/test/java/` |
-| alert-service | `alert-service/src/test/java/` |
 | user-service | `user-service/src/test/java/` |
 | payment-service | `payment-service/src/test/java/` |
 | order-service | `order-service/src/test/java/` |
@@ -51,7 +50,6 @@ Or directly with Gradle:
 | Service | Tests | Description |
 |---------|-------|-------------|
 | ingestion-service | 9 | Controller tests for log ingestion, validation, idempotency |
-| alert-service | 17 | Controller, service, and model tests for alerting |
 
 ## Test Stack
 

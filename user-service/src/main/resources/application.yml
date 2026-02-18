@@ -11,7 +11,7 @@ app:
   payment-service:
     url: http://localhost:9002
   generator:
-    enabled: false
+    enabled: true
     interval-ms: 1000
 
 logging:

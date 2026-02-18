@@ -19,23 +19,6 @@ CREATE INDEX IF NOT EXISTS idx_logs_severity_timestamp ON logs(severity, timesta
 CREATE INDEX IF NOT EXISTS idx_logs_trace_id ON logs(trace_id) WHERE trace_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp DESC);
 
--- Alerts table
-CREATE TABLE IF NOT EXISTS alerts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    rule_name VARCHAR(100) NOT NULL,
-    service_name VARCHAR(100),
-    severity VARCHAR(10),
-    count BIGINT NOT NULL,
-    threshold BIGINT NOT NULL,
-    window_seconds INT NOT NULL,
-    message TEXT,
-    triggered_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_alerts_rule_name ON alerts(rule_name);
-CREATE INDEX IF NOT EXISTS idx_alerts_triggered_at ON alerts(triggered_at DESC);
-
 -- Processed IDs table (for idempotency)
 CREATE TABLE IF NOT EXISTS processed_ids (
     idempotency_key VARCHAR(100) PRIMARY KEY,
