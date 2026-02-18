@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-02-18T20:47:53.493Z",
+  "test": "architecture-load-test",
+  "duration_sec": 261.462774,
+  "config": {
+    "targetRPS": 50,
+    "ingestionUrl": "http://localhost",
+    "monitoringUrl": "http://localhost:8083"
+  },
+  "ingestion": {
+    "total": 5895,
+    "successful": 5689,
+    "failed": 206,
+    "rateLimited": 0,
+    "successRate": 96.50551314673453,
+    "throughput": 21.758355550836463,
+    "latency": {
+      "avg": 54.873791527509226,
+      "med": 4,
+      "p95": 22.599999999999746,
+      "max": 11406
+    }
+  },
+  "monitoring": {
+    "total": 2397,
+    "throughput": 9.167653059475303,
+    "latency": {
+      "avg": 34.465164789319985,
+      "med": 20,
+      "p95": 38.199999999999896
+    }
+  },
+  "e2e": {
+    "successful": 117,
+    "latency": {
+      "avg": 614.957264957265,
+      "med": 510,
+      "p95": 594.7999999999997
+    }
+  }
+}
