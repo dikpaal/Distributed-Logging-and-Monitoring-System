@@ -19,7 +19,7 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 ```
 ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
 │  user-service   │──────▶│ payment-service │──────▶│  order-service  │
-│ (log generator) │       │ (log generator) │       │ (log generator) │
+│     :9001       │       │     :9002       │       │     :9003       │
 └────────┬────────┘       └────────┬────────┘       └────────┬────────┘
          │                         │                         │
          │         (shared trace IDs - distributed tracing)  │
@@ -27,42 +27,38 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
                                    │
                                    ▼
                           ┌─────────────────┐
-                          │     NGINX       │
+                          │     NGINX       │  :80
                           │  Load Balancer  │
-                          │  + Rate Limit   │
                           └────────┬────────┘
                                    │
                     ┌──────────────┴──────────────┐
-                    ▼                             ▼
+                    ▼                              ▼
            ┌─────────────────┐           ┌─────────────────┐
            │ ingestion-svc-1 │           │ ingestion-svc-2 │
+           │     :8080       │           │     :8081       │
            └────────┬────────┘           └────────┬────────┘
                     └──────────────┬──────────────┘
                                    ▼
                           ┌─────────────────┐
-                          │     Kafka       │
+                          │     Kafka       │  :9092
                           └────────┬────────┘
                                    ▼
                           ┌─────────────────┐
-                          │ processing-svc  │
+                          │ monitoring-svc  │  :8083
+                          │ (consumer +     │
+                          │  REST + WS)     │
                           └────────┬────────┘
                                    │
-                    ┌──────────────┴──────────────┐
-                    ▼                             ▼
-           ┌─────────────────┐           ┌─────────────────┐
-           │   PostgreSQL    │           │     Redis       │
-           └────────┬────────┘           └─────────────────┘
-                    │
-                    ▼
-           ┌─────────────────┐
-           │ monitoring-svc  │◀──── Kafka (live stream)
-           │ (REST + WebSocket)
-           └────────┬────────┘
-                    │
-                    ▼
-           ┌─────────────────┐
-           │ React Dashboard │
-           └─────────────────┘
+                    ┌──────────────┼──────────────┐
+                    ▼              │              ▼
+           ┌─────────────────┐     │     ┌─────────────────┐
+           │   PostgreSQL    │     │     │     Redis       │
+           │   :5434 (host)  │     │     │     :6379       │
+           └─────────────────┘     │     └─────────────────┘
+                                   ▼
+                          ┌─────────────────┐
+                          │ React Dashboard │  :5173
+                          └─────────────────┘
 ```
 
 ## Services
@@ -78,8 +74,7 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 | Service | Port | Description |
 |---------|------|-------------|
 | ingestion-service | 8080, 8081 | REST API for log intake, publishes to Kafka (2 instances) |
-| processing-service | 8082 | Consumes from Kafka, persists to PostgreSQL, caches in Redis |
-| monitoring-service | 8083 | Query APIs, metrics, and WebSocket for live logs |
+| monitoring-service | 8083 | Kafka consumer, persistence, query APIs, WebSocket for live logs |
 
 ### Frontend
 | Component | Port | Description |
@@ -136,7 +131,6 @@ docker-compose up -d
 # 4) Start backend services (separate terminals)
 ./gradlew :ingestion-service:bootRun --args='--server.port=8080'
 ./gradlew :ingestion-service:bootRun --args='--server.port=8081'
-./gradlew :processing-service:bootRun
 ./gradlew :monitoring-service:bootRun
 ./gradlew :order-service:bootRun
 ./gradlew :payment-service:bootRun
@@ -196,8 +190,6 @@ cd load-tests
 
 ### Baseline Results
 
-Direct ingestion (bypassing NGINX):
-
 | Metric | Value |
 |--------|-------|
 | Requests accepted | 11,680 |
@@ -216,8 +208,7 @@ distributed-logging-system/
 ├── payment-service/        # Log generator (calls order-service)
 ├── order-service/          # Log generator (leaf service)
 ├── ingestion-service/      # Log intake REST API
-├── processing-service/     # Kafka consumer, DB writer
-├── monitoring-service/     # Query APIs + WebSocket
+├── monitoring-service/     # Kafka consumer, persistence, query APIs, WebSocket
 ├── dashboard/              # React frontend
 ├── load-tests/             # k6 scripts and runner
 ├── nginx/                  # Load balancer config

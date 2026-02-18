@@ -1,4 +1,4 @@
-package com.logging.processing.service;
+package com.logging.monitoring.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,21 +24,12 @@ public class IdempotencyService {
         this.ttl = Duration.ofHours(ttlHours);
     }
 
-    /**
-     * Check if a message with this idempotency key has already been processed.
-     * If not processed, marks it as processed atomically.
-     *
-     * @param idempotencyKey the unique key for this message
-     * @return true if this is a new message (not processed before), false if already processed
-     */
     public boolean tryMarkAsProcessed(String idempotencyKey) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            return true; // No idempotency key means always process
+            return true;
         }
 
         String key = KEY_PREFIX + idempotencyKey;
-
-        // SETNX with expiration - returns true if key was set (new), false if existed
         Boolean isNew = redisTemplate.opsForValue().setIfAbsent(key, "1", ttl);
 
         if (Boolean.TRUE.equals(isNew)) {
@@ -50,20 +41,6 @@ public class IdempotencyService {
         }
     }
 
-    /**
-     * Check if an idempotency key has already been processed.
-     */
-    public boolean isProcessed(String idempotencyKey) {
-        if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            return false;
-        }
-        String key = KEY_PREFIX + idempotencyKey;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
-    }
-
-    /**
-     * Remove a processed key (useful for retry scenarios where processing failed after marking).
-     */
     public void removeProcessedKey(String idempotencyKey) {
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             String key = KEY_PREFIX + idempotencyKey;

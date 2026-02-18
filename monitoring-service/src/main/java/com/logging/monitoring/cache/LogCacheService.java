@@ -1,8 +1,8 @@
-package com.logging.processing.cache;
+package com.logging.monitoring.cache;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.logging.processing.entity.LogEntity;
+import com.logging.monitoring.entity.LogEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,18 +38,10 @@ public class LogCacheService {
 
         try {
             String logJson = objectMapper.writeValueAsString(logEntity);
-
-            // Push to left (most recent first)
             redisTemplate.opsForList().leftPush(key, logJson);
-
-            // Trim to keep only recent logs
             redisTemplate.opsForList().trim(key, 0, recentLogsLimit - 1);
-
-            // Set TTL
             redisTemplate.expire(key, ttl);
-
             log.debug("Cached log for service: {}", logEntity.getServiceName());
-
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize log for caching: {}", e.getMessage());
         }

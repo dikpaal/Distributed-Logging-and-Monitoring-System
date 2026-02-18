@@ -67,7 +67,7 @@ stop_all() {
 
     # Kill Java Spring Boot processes (our services run on specific ports)
     echo "  Stopping Spring Boot services..."
-    for port in 8080 8081 8082 8083 9001 9002 9003; do
+    for port in 8080 8081 8083 9001 9002 9003; do
         pid=$(lsof -ti:$port 2>/dev/null) || true
         if [ -n "$pid" ]; then
             kill -9 $pid 2>/dev/null || true
@@ -163,11 +163,7 @@ echo "  Starting ingestion-service (port 8080)..."
 echo "  Starting ingestion-service (port 8081)..."
 ./gradlew :ingestion-service:bootRun --args='--server.port=8081' > logs/ingestion-2.log 2>&1 &
 
-# Processing service
-echo "  Starting processing-service (port 8082)..."
-./gradlew :processing-service:bootRun > logs/processing.log 2>&1 &
-
-# Monitoring service
+# Monitoring service (consumes from Kafka, persists, provides query APIs + WebSocket)
 echo "  Starting monitoring-service (port 8083)..."
 ./gradlew :monitoring-service:bootRun > logs/monitoring.log 2>&1 &
 
@@ -188,8 +184,6 @@ sleep 30
 
 wait_for_port 8080 "ingestion-service-1"
 wait_for_port 8081 "ingestion-service-2"
-# Note: processing-service has no HTTP endpoint (pure Kafka consumer)
-echo -e "${GREEN}  processing-service is running (Kafka consumer, no HTTP port)${NC}"
 wait_for_port 8083 "monitoring-service"
 wait_for_port 9003 "order-service"
 wait_for_port 9002 "payment-service"

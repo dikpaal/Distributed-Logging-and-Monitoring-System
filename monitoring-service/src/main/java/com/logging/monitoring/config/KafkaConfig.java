@@ -1,4 +1,4 @@
-package com.logging.processing.kafka;
+package com.logging.monitoring.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -12,11 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.CommonErrorHandler;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
@@ -101,12 +97,10 @@ public class KafkaConfig {
 
     @Bean
     public CommonErrorHandler errorHandler(KafkaTemplate<String, LogEvent> kafkaTemplate) {
-        // Configure exponential backoff for retries
         ExponentialBackOff backOff = new ExponentialBackOff(initialIntervalMs, multiplier);
         backOff.setMaxInterval(maxIntervalMs);
         backOff.setMaxElapsedTime(maxIntervalMs * maxAttempts);
 
-        // Dead letter recoverer - sends failed messages to DLQ topic
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
                 (record, ex) -> {
                     log.error("Sending record to DLQ after {} retries. Topic: {}, Partition: {}, Offset: {}, Error: {}",

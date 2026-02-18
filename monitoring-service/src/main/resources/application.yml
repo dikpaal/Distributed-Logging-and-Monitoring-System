@@ -18,17 +18,30 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: log-stream-processors
-      auto-offset-reset: latest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: com.logging.common.dto
+      group-id: log-processors
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 app:
   cors:
     allowed-origins: http://localhost:5173,http://localhost:3000
+  kafka:
+    topic: logs.ingested
+    dlq-topic: logs.dlq
+  cache:
+    recent-logs-limit: 100
+    ttl-hours: 1
+  idempotency:
+    ttl-hours: 24
+  retry:
+    max-attempts: 3
+    initial-interval-ms: 1000
+    multiplier: 2.0
+    max-interval-ms: 10000
 
 logging:
   level:
     com.logging: DEBUG
+    org.springframework.kafka: WARN

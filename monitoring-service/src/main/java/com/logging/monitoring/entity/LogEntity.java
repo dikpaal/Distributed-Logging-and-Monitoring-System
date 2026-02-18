@@ -49,6 +49,18 @@ public class LogEntity {
     public LogEntity() {
     }
 
+    public LogEntity(String serviceName, String severity, String message, Instant timestamp,
+                     String traceId, String host, Map<String, Object> metadata) {
+        this.serviceName = serviceName;
+        this.severity = severity;
+        this.message = message;
+        this.timestamp = timestamp;
+        this.traceId = traceId;
+        this.host = host;
+        this.metadata = metadata;
+        this.createdAt = Instant.now();
+    }
+
     public UUID getId() {
         return id;
     }
