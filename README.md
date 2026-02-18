@@ -166,38 +166,53 @@ cd load-tests
 # Quick smoke test (verify system is working)
 ./run-load-tests.sh smoke
 
-# Run specific load tests
-./run-load-tests.sh ingestion     # Single log ingestion (~6 min)
-./run-load-tests.sh batch         # Batch ingestion (~4 min)
-./run-load-tests.sh monitoring    # Query APIs (~4 min)
-./run-load-tests.sh all           # Run all tests
+# Architecture test (tests full system via NGINX, ~2 min)
+./run-load-tests.sh architecture
+./run-load-tests.sh architecture --quick   # 30s version
 
-# Quick mode (30s with 10 VUs)
-./run-load-tests.sh ingestion --quick
+# Bypass NGINX (no rate limiting)
+./run-load-tests.sh architecture --direct
 
-# Direct to ingestion service (bypasses NGINX rate limiting)
-./run-load-tests.sh ingestion --base-url http://localhost:8080
+# Run all tests
+./run-load-tests.sh all
 ```
 
 ### Test Configurations
 
-| Test | Duration | Max VUs | Thresholds |
-|------|----------|---------|------------|
-| smoke | ~10s | 1 | p95 < 1s |
-| ingestion | ~6 min | 100 | p95 < 500ms, p99 < 1s |
-| batch | ~4 min | 20 | p95 < 2s, p99 < 5s |
-| monitoring | ~4 min | 30 | p95 < 200ms, p99 < 500ms |
+| Test | Duration | Target RPS | Thresholds |
+|------|----------|------------|------------|
+| smoke | ~10s | 1 VU | p95 < 1s |
+| architecture | ~2 min | 50 ingestion + 20 monitoring | p95 < 500ms, <10% rate limited |
+
+### Architecture Test
+
+The `architecture` test measures the full system with NGINX load balancing:
+
+- **Ingestion scenario**: 50 req/s sustained (under NGINX 100r/s limit)
+- **Monitoring scenario**: 20 queries/s against monitoring-service APIs
+- **E2E verification**: 1 req/s verifying logs flow through Kafka to monitoring
+
+Metrics captured:
+- Ingestion latency and throughput
+- Rate limit hit rate (429 responses)
+- Monitoring query latency
+- End-to-end pipeline latency (ingestion → Kafka → query visibility)
 
 ### Baseline Results
 
-| Metric | Value |
-|--------|-------|
-| Requests accepted | 11,680 |
-| Throughput | 194.46 req/s |
-| Error rate | 0.00% |
-| Avg latency | 702.28us |
-| p95 latency | 924.04us |
-| p99 latency | 2.39ms |
+| Component | Metric | Value |
+|-----------|--------|-------|
+| **Ingestion** | Success Rate | 96.51% |
+| | Throughput | 21.76 logs/sec |
+| | Median Latency | 4ms |
+| | p95 Latency | 22.6ms |
+| **Monitoring** | Throughput | 9.17 queries/sec |
+| | Median Latency | 20ms |
+| | p95 Latency | 38.2ms |
+| **E2E Pipeline** | Median Latency | 510ms |
+| | p95 Latency | 595ms |
+
+*Tested with: 50 ingestion RPS + 20 monitoring RPS through NGINX load balancer*
 
 ## Project Structure
 
