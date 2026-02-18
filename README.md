@@ -11,7 +11,7 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
 | Build | Gradle (Kotlin DSL), Vite |
 | Load Balancer | NGINX |
 | Message Broker | Apache Kafka |
-| Database | PostgreSQL |
+| Database | PostgreSQL (+ Hibernate) |
 | Cache | Redis |
 
 ## Architecture
