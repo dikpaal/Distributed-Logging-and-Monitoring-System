@@ -48,7 +48,7 @@ A scalable, event-driven log ingestion and monitoring pipeline demonstrating mic
                           └────────┬────────┘
                                    │
                     ┌──────────────┴──────────────┐
-                    ▼                              ▼
+                    ▼                             ▼
            ┌─────────────────┐           ┌─────────────────┐
            │   PostgreSQL    │           │     Redis       │
            └────────┬────────┘           └─────────────────┘
